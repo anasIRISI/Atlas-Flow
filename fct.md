@@ -78,6 +78,8 @@ Cet exemple fonctionne localement, sans clé API. Chaque clic sur le bouton cré
 
 ## 4. Clés, données et dépannage
 
+**Configurer les API et tester chaque étape : [CONFIGURATION_API.md](CONFIGURATION_API.md).** Commence par Gmail : Connexions → SMTP → Gmail → Test → Save, puis importe l’exemple **Test Gmail - Atlas Flow** et envoie-toi un email.
+
 - **Aucune clé pour commencer** : l’exemple personnel, les transformations locales, les fichiers et l’historique fonctionnent sans service externe. Météo et appels HTTP nécessitent Internet ; email, messagerie et IA nécessitent leurs identifiants.
 - Configuration facultative : copie `.env.example` vers `.env`. Pour changer de port, mets `PORT=5680`, redémarre et ouvre `http://localhost:5680`. Les variables gardent leur préfixe technique `FLOWFORGE_`.
 - Les étapes détaillées pour les clés se trouvent dans [API_SETUP.md](API_SETUP.md).

@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import type { CredentialSummary, JsonObject } from '@flowforge/shared';
 import { renderEmailHtml, renderEmailText } from '../src/nodes/_shared/email-template.js';
 import { describeSmtpError } from '../src/nodes/_shared/smtp.js';
@@ -51,6 +52,21 @@ async function send(parameters: JsonObject, items: JsonObject[] = [{}], extra: J
 }
 
 describe('Send Email node', () => {
+  it('runs the Atlas Gmail example with a local SMTP credential', async () => {
+    await start();
+    await saveCredential();
+    const workflow = JSON.parse(readFileSync(new URL('../../examples/atlas-smtp-test.json', import.meta.url), 'utf8'));
+    const email = workflow.nodes.find((n: { type: string }) => n.type === 'flowforge.sendEmail');
+    expect(email.parameters.toEmail).toBe('');
+    email.parameters.toEmail = 'me@example.com';
+    const res = await agent.post('/api/dev/run').send(workflow);
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('success');
+    expect(smtp.messages).toHaveLength(1);
+    expect(smtp.messages[0]!.mail.subject).toBe('Test Atlas Flow');
+    expect(smtp.messages[0]!.envelope.to).toEqual(['me@example.com']);
+    expect(smtp.messages[0]!.mail.text).toContain('Mon workflow Atlas Flow');
+  });
   it('sends a text email and returns the delivery report', async () => {
     await start();
     await saveCredential();

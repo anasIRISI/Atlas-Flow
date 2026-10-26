@@ -4,6 +4,8 @@ Version personnalisée de FlowForge : identité bleu/turquoise, navigation princ
 
 **Démarrage et utilisation en bref : [fct.md](fct.md).** Lancez `npm install`, puis `npm start`, et ouvrez http://localhost:5679.
 
+**Configuration des API et tests pas à pas : [CONFIGURATION_API.md](CONFIGURATION_API.md)** (commencer par Gmail / SMTP).
+
 Les sections suivantes documentent le moteur FlowForge d’origine, conservé dans cette adaptation. Certains écrans avancés et noms techniques restent en anglais.
 
 A visual workflow automation tool inspired by [n8n](https://n8n.io), built as a school project: triggers, 50+ nodes,

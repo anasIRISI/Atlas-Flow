@@ -1,0 +1,37 @@
+{
+  "name": "Test Gmail - Atlas Flow",
+  "meta": {
+    "description": "Premier test Gmail/SMTP : selectionne ta connexion SMTP et remplis To Email avec ta propre adresse, puis Enregistrer et Executer. Un clic envoie un vrai email. Guide : CONFIGURATION_API.md.",
+    "categories": ["Email", "Utilities"]
+  },
+  "nodes": [
+    {
+      "id": "atlas-mail-start",
+      "name": "Demarrer le test",
+      "type": "flowforge.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {}
+    },
+    {
+      "id": "atlas-mail-send",
+      "name": "Envoyer mon email",
+      "type": "flowforge.sendEmail",
+      "typeVersion": 1,
+      "position": [280, 0],
+      "parameters": {
+        "fromEmail": "",
+        "toEmail": "",
+        "subject": "Test Atlas Flow",
+        "emailFormat": "text",
+        "text": "Bonjour ! Mon workflow Atlas Flow peut maintenant envoyer des emails."
+      },
+      "notes": "Avant le test : selectionne Gmail Atlas dans Credentials et remplis To Email avec ta propre adresse. From Email peut rester vide. Chaque execution envoie un vrai email."
+    }
+  ],
+  "connections": {
+    "Demarrer le test": {
+      "main": [[{ "node": "Envoyer mon email", "type": "main", "index": 0 }]]
+    }
+  }
+}
