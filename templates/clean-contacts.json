@@ -1,0 +1,167 @@
+{
+  "name": "Clean a contact list",
+  "meta": {
+    "description": "Removes duplicate contacts (same email, ignoring case), drops entries without an email and normalises the names.",
+    "categories": [
+      "Data"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "start",
+      "name": "Start",
+      "type": "flowforge.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "data",
+      "name": "Sample contacts",
+      "type": "flowforge.code",
+      "typeVersion": 1,
+      "position": [
+        250,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [\n  { json: { name: 'ada lovelace', email: 'Ada@example.com' } },\n  { json: { name: 'Ada Lovelace', email: 'ada@example.com' } },\n  { json: { name: 'alan turing', email: 'alan@example.com' } },\n  { json: { name: 'no mail', email: '' } },\n];"
+      }
+    },
+    {
+      "id": "dup",
+      "name": "Remove duplicates",
+      "type": "flowforge.removeDuplicates",
+      "typeVersion": 1,
+      "position": [
+        500,
+        0
+      ],
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "email",
+        "options": {
+          "ignoreCase": true
+        }
+      }
+    },
+    {
+      "id": "flt",
+      "name": "Has an email",
+      "type": "flowforge.filter",
+      "typeVersion": 1,
+      "position": [
+        760,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.email }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "fix",
+      "name": "Normalise",
+      "type": "flowforge.set",
+      "typeVersion": 1,
+      "position": [
+        1020,
+        0
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "name",
+              "value": "={{ $json.name.replace(/\\b\\w/g, (c) => c.toUpperCase()) }}",
+              "type": "string"
+            },
+            {
+              "name": "email",
+              "value": "={{ $json.email.toLowerCase() }}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "note",
+      "name": "How to use",
+      "type": "flowforge.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -220
+      ],
+      "parameters": {
+        "content": "## Clean a contact list\nClick **Execute workflow** and open each node to see how the list shrinks. Replace **Sample contacts** with your own data source.",
+        "width": 560,
+        "height": 120,
+        "color": 4
+      }
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Sample contacts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sample contacts": {
+      "main": [
+        [
+          {
+            "node": "Remove duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove duplicates": {
+      "main": [
+        [
+          {
+            "node": "Has an email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has an email": {
+      "main": [
+        [
+          {
+            "node": "Normalise",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {}
+}

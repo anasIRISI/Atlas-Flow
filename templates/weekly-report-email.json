@@ -1,0 +1,145 @@
+{
+  "name": "Weekly report by email",
+  "meta": {
+    "description": "Every Monday morning an API is queried, the entries are counted and a designed HTML email with the numbers is sent.",
+    "categories": [
+      "Scheduling",
+      "Email",
+      "Data"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "sch",
+      "name": "Every Monday 8:00",
+      "type": "flowforge.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "weeksInterval": 1,
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 8,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "http",
+      "name": "Get data",
+      "type": "flowforge.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        260,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://jsonplaceholder.typicode.com/todos?_limit=50",
+        "options": {
+          "splitIntoItems": true
+        }
+      }
+    },
+    {
+      "id": "sum",
+      "name": "Count",
+      "type": "flowforge.summarize",
+      "typeVersion": 1,
+      "position": [
+        520,
+        0
+      ],
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "count",
+              "field": "id"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "mail",
+      "name": "Send report",
+      "type": "flowforge.sendEmail",
+      "typeVersion": 1,
+      "position": [
+        780,
+        0
+      ],
+      "parameters": {
+        "toEmail": "you@example.com",
+        "subject": "Weekly report",
+        "emailFormat": "template",
+        "templateTitle": "Weekly report",
+        "templateMessage": "=This week we processed **{{ $json.count_id }}** entries.",
+        "templateColor": "#f0592a"
+      }
+    },
+    {
+      "id": "note",
+      "name": "How to use",
+      "type": "flowforge.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -230
+      ],
+      "parameters": {
+        "content": "## Weekly report\n1. Add an **SMTP** credential (or `SMTP_*` in `.env`).\n2. Set your address in **Send report** and your API in **Get data**.\n3. Activate the workflow.",
+        "width": 520,
+        "height": 150,
+        "color": 4
+      }
+    }
+  ],
+  "connections": {
+    "Every Monday 8:00": {
+      "main": [
+        [
+          {
+            "node": "Get data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get data": {
+      "main": [
+        [
+          {
+            "node": "Count",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Count": {
+      "main": [
+        [
+          {
+            "node": "Send report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {}
+}

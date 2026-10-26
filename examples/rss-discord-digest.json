@@ -1,0 +1,109 @@
+{
+  "name": "RSS → Discord digest",
+  "meta": {
+    "description": "Watches an RSS feed and posts all the new articles as ONE tidy Discord embed (a digest) instead of one message per article. Already-seen posts are remembered, nothing is sent twice.",
+    "categories": [
+      "Messaging",
+      "Data"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "rss",
+      "name": "New blog posts",
+      "type": "flowforge.rssFeedTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "feedUrl": "https://hnrss.org/newest?points=100",
+        "pollInterval": 30,
+        "pollUnit": "minutes",
+        "options": {
+          "emitExistingOnFirstRun": true
+        }
+      }
+    },
+    {
+      "id": "agg",
+      "name": "Collect posts",
+      "type": "flowforge.aggregate",
+      "typeVersion": 1,
+      "position": [
+        280,
+        0
+      ],
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "data"
+      }
+    },
+    {
+      "id": "discord",
+      "name": "Post digest to Discord",
+      "type": "flowforge.discord",
+      "typeVersion": 1,
+      "position": [
+        560,
+        0
+      ],
+      "parameters": {
+        "operation": "sendMessage",
+        "content": "=📰 **{{ $json.data.length }} new post(s)**",
+        "embeds": {
+          "embed": [
+            {
+              "title": "Feed digest",
+              "description": "={{ $json.data.slice(0, 10).map(p => '• [' + String(p.title ?? '').slice(0, 90) + '](' + p.link + ')').join('\\n') }}",
+              "color": "#F78C40",
+              "footerText": "FlowForge RSS digest",
+              "timestamp": "now"
+            }
+          ]
+        },
+        "options": {
+          "username": "FlowForge"
+        }
+      }
+    },
+    {
+      "id": "note",
+      "name": "How to use",
+      "type": "flowforge.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -300
+      ],
+      "parameters": {
+        "content": "## RSS → Discord digest\n1. **Credentials**: add a **Discord Webhook** credential (channel settings → Integrations → Webhooks).\n2. Change the **Feed URL** to the blog or news feed you like.\n3. Click **Listen for test event** to see the newest post, then **Activate**.\nEvery 30 minutes the new posts are collected into ONE item (Aggregate) and posted as a single Discord message. Posts already seen are never sent twice."
+      }
+    }
+  ],
+  "connections": {
+    "New blog posts": {
+      "main": [
+        [
+          {
+            "node": "Collect posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect posts": {
+      "main": [
+        [
+          {
+            "node": "Post digest to Discord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,190 @@
+@import "tailwindcss";
+
+/* Atlas Flow theme. Tokens become Tailwind utilities: bg-panel, text-muted, border-line, … */
+@theme {
+  --color-bg: #090f1c;
+  --color-panel: #101a2b;
+  --color-panel-2: #152136;
+  --color-panel-3: #1c2b43;
+  --color-line: #22324a;
+  --color-line-strong: #354963;
+
+  --color-fg: #edf4ff;
+  --color-muted: #a7b8ce;
+  --color-subtle: #879bb5;
+
+  --color-accent: #237cb8;
+  --color-accent-hover: #3298d8;
+  --color-accent-soft: rgb(56 189 248 / 0.13);
+
+  --color-success: #2fbf71;
+  --color-danger: #f0524f;
+  --color-warning: #f2a93b;
+  --color-info: #4ea1ff;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --animate-fade-in: fade-in 160ms ease-out;
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: none; }
+  }
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  html {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-bg text-fg font-sans antialiased;
+    font-size: 14px;
+  }
+  ::selection {
+    background: rgb(56 189 248 / 0.35);
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line-strong) transparent;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
+
+/* ── Editor ───────────────────────────────────────────────────────────── */
+/* Running node: a ring + halo that pulses with opacity/transform only (compositor, no repaint of box-shadow). */
+@keyframes ff-glow {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.06); }
+}
+.ff-node-running::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  pointer-events: none;
+  border: 2px solid rgb(78 161 255 / 0.9);
+  box-shadow: 0 0 22px 4px rgb(78 161 255 / 0.5);
+  will-change: transform, opacity;
+  animation: ff-glow 1.2s ease-in-out infinite;
+}
+@keyframes ff-check-pop {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.5); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.ff-check-pop {
+  animation: ff-check-pop 380ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+@keyframes ff-shake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-5px); }
+  35% { transform: translateX(5px); }
+  55% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
+}
+.ff-shake {
+  animation: ff-shake 420ms ease-in-out 1;
+}
+@keyframes ff-bubble-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.ff-bubble {
+  animation: ff-bubble-in 120ms ease-out both;
+}
+@keyframes ff-listen {
+  0%, 100% { box-shadow: 0 0 0 2px rgb(45 212 191 / 0.8), 0 0 10px 1px rgb(45 212 191 / 0.25); }
+  50% { box-shadow: 0 0 0 3px rgb(45 212 191 / 1), 0 0 24px 6px rgb(45 212 191 / 0.45); }
+}
+.ff-node-listening {
+  animation: ff-listen 1.4s ease-in-out infinite;
+}
+.react-flow {
+  --xy-background-color: var(--color-bg);
+  --xy-node-border-radius: 12px;
+  --xy-selection-background-color: rgb(56 189 248 / 0.08);
+  --xy-selection-border: 1px dashed rgb(56 189 248 / 0.7);
+  --xy-attribution-background-color: transparent;
+  --xy-minimap-background-color: var(--color-panel);
+}
+
+.atlas-hero {
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 95% 10%, rgb(45 212 191 / 0.15), transparent 55%), linear-gradient(115deg, #142741, #102031 65%);
+}
+.atlas-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgb(148 184 218 / 0.12) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: linear-gradient(to right, transparent, black);
+}
+.atlas-sidebar { background: linear-gradient(180deg, #111e32, #0e1828); }
+.atlas-content { background: radial-gradient(ellipse at 80% 0%, rgb(35 124 184 / 0.05), transparent 40%); }
+@media (max-width: 640px) {
+  .atlas-content .px-8 { padding-left: 1rem; padding-right: 1rem; }
+  .atlas-content header > div { max-width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+.react-flow__node-workflow,
+.react-flow__node-sticky {
+  background: transparent;
+  border: none;
+  padding: 0;
+  box-shadow: none !important;
+}
+.react-flow__attribution a {
+  color: var(--color-subtle);
+}
+.react-flow__edge.selected .react-flow__edge-path,
+.react-flow__edge:focus .react-flow__edge-path {
+  stroke: var(--color-accent) !important;
+}
+.react-flow__connection-path {
+  stroke: var(--color-accent);
+  stroke-width: 2;
+}
+
+/* AI builder: nodes pop in one by one, edges draw themselves. */
+@keyframes ff-pop {
+  0% { transform: scale(0.4); opacity: 0; }
+  60% { transform: scale(1.12); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.ff-node-pop {
+  animation: ff-pop 420ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+@keyframes ff-draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+.ff-edge-draw {
+  stroke-dasharray: 1;
+  animation: ff-draw 520ms ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ff-node-pop,
+  .ff-edge-draw,
+  .ff-check-pop,
+  .ff-shake,
+  .ff-bubble,
+  .ff-node-running::after {
+    animation: none;
+  }
+  .ff-particle {
+    display: none;
+  }
+}

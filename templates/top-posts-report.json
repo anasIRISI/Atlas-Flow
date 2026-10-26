@@ -1,0 +1,164 @@
+{
+  "name": "Fetch, sort and rank API data",
+  "meta": {
+    "description": "Downloads a list from a public API, sorts it, keeps the top entries and adds a rank: a compact pattern for any ranking report.",
+    "categories": [
+      "Data",
+      "Utilities"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "start",
+      "name": "Start",
+      "type": "flowforge.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "http",
+      "name": "Get posts",
+      "type": "flowforge.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        260,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://jsonplaceholder.typicode.com/posts",
+        "options": {
+          "splitIntoItems": true
+        }
+      }
+    },
+    {
+      "id": "sort",
+      "name": "Sort by title length",
+      "type": "flowforge.set",
+      "typeVersion": 1,
+      "position": [
+        520,
+        0
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "name": "length",
+              "value": "={{ $json.title.length }}",
+              "type": "number"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "order",
+      "name": "Longest first",
+      "type": "flowforge.sort",
+      "typeVersion": 1,
+      "position": [
+        780,
+        0
+      ],
+      "parameters": {
+        "type": "simple",
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "length",
+              "order": "descending"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "top",
+      "name": "Keep top 5",
+      "type": "flowforge.limit",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        0
+      ],
+      "parameters": {
+        "maxItems": 5,
+        "keep": "firstItems"
+      }
+    },
+    {
+      "id": "note",
+      "name": "How to use",
+      "type": "flowforge.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -220
+      ],
+      "parameters": {
+        "content": "## Fetch, sort, rank\nClick **Execute workflow**. Replace the URL in **Get posts** with any JSON API and change the sort field.",
+        "width": 520,
+        "height": 120,
+        "color": 4
+      }
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Get posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get posts": {
+      "main": [
+        [
+          {
+            "node": "Sort by title length",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort by title length": {
+      "main": [
+        [
+          {
+            "node": "Longest first",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Longest first": {
+      "main": [
+        [
+          {
+            "node": "Keep top 5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {}
+}

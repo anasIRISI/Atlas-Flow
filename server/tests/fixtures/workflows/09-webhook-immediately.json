@@ -1,0 +1,60 @@
+{
+  "name": "09 Webhook: respond immediately",
+  "nodes": [
+    {
+      "id": "1",
+      "name": "Webhook",
+      "type": "flowforge.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "path": "demo/immediate",
+        "httpMethod": "POST",
+        "responseMode": "onReceived",
+        "options": {
+          "responseCode": 201,
+          "responseBody": "{\"accepted\": true}"
+        }
+      }
+    },
+    {
+      "id": "2",
+      "name": "Save order",
+      "type": "flowforge.set",
+      "typeVersion": 1,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "includeOtherFields": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a",
+              "name": "order",
+              "value": "={{ $json.body.item }}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Save order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,164 @@
+{
+  "name": "Website chatbot with AI Agent",
+  "meta": {
+    "description": "A chat page answered by an AI Agent (Gemini) with memory, a weather tool and a calculator. Test it in the editor's chat panel."
+  },
+  "nodes": [
+    {
+      "id": "chat",
+      "name": "Chat",
+      "type": "flowforge.chatTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "website-agent-example",
+      "parameters": {
+        "title": "FlowForge agent",
+        "subtitle": "I can check the weather and calculate",
+        "initialMessages": "Hi there! 👋\nAsk me about the weather anywhere, or give me something to calculate.",
+        "options": {
+          "inputPlaceholder": "e.g. Do I need a jacket in Oslo today?"
+        }
+      }
+    },
+    {
+      "id": "agent",
+      "name": "AI Agent",
+      "type": "flowforge.aiAgent",
+      "typeVersion": 1,
+      "position": [
+        300,
+        0
+      ],
+      "parameters": {
+        "prompt": "={{ $json.chatInput }}",
+        "systemMessage": "You are a friendly assistant. Answer in the language of the user, in a few short sentences. Use the get_weather tool for any question about the weather or what to wear, and the calculator tool for any calculation. If a tool fails, say so honestly."
+      }
+    },
+    {
+      "id": "model",
+      "name": "Gemini Chat Model",
+      "type": "flowforge.geminiChatModel",
+      "typeVersion": 1,
+      "position": [
+        165,
+        200
+      ],
+      "parameters": {
+        "model": "default"
+      }
+    },
+    {
+      "id": "memory",
+      "name": "Simple Memory",
+      "type": "flowforge.simpleMemory",
+      "typeVersion": 1,
+      "position": [
+        315,
+        200
+      ],
+      "parameters": {
+        "sessionKey": "={{ $json.sessionId }}",
+        "contextWindow": 10
+      }
+    },
+    {
+      "id": "weather",
+      "name": "Weather Tool",
+      "type": "flowforge.weatherTool",
+      "typeVersion": 1,
+      "position": [
+        465,
+        200
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "calc",
+      "name": "Calculator",
+      "type": "flowforge.calculatorTool",
+      "typeVersion": 1,
+      "position": [
+        615,
+        200
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "note",
+      "name": "How to use",
+      "type": "flowforge.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -320
+      ],
+      "parameters": {
+        "content": "## Website chatbot with AI Agent\n1. **Credentials**: add a **Google Gemini API** credential (key from aistudio.google.com/apikey), or set `GEMINI_API_KEY` in `.env`.\n2. Click **Chat** (bottom right of the canvas) and ask: *What is the weather in Casablanca?* then *Convert that temperature to Fahrenheit*.\n3. Watch the canvas: the model, the memory and the tools light up when the agent uses them.\n4. Switch to **Active** and open the **Chat** node: the QR code gives the chat page for your phone.\n\nAdd more tools from the **Tool** slot under the agent (HTTP Request Tool, Code Tool).",
+        "width": 640,
+        "height": 260,
+        "color": 4
+      }
+    }
+  ],
+  "connections": {
+    "Chat": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weather Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {}
+}

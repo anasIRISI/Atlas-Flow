@@ -1,0 +1,127 @@
+{
+  "name": "Telegram assistant: /weather",
+  "meta": {
+    "description": "A Telegram bot that answers /weather <city> with the current weather and forecast (Open-Meteo, no key). Works without a public URL."
+  },
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "On /weather",
+      "type": "flowforge.telegramTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "options": {
+          "command": "/weather"
+        }
+      }
+    },
+    {
+      "id": "weather",
+      "name": "Weather",
+      "type": "flowforge.openMeteo",
+      "typeVersion": 1,
+      "position": [
+        280,
+        0
+      ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "operation": "getWeather",
+        "locationMode": "city",
+        "city": "={{ $json.args || 'Paris' }}",
+        "include": [
+          "current",
+          "daily"
+        ],
+        "forecastDays": 3
+      }
+    },
+    {
+      "id": "reply",
+      "name": "Reply",
+      "type": "flowforge.telegram",
+      "typeVersion": 1,
+      "position": [
+        560,
+        -90
+      ],
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "={{ $('On /weather').item.json.chatId }}",
+        "text": "={{ $json.summary }}\n\n{{ $json.daily.map((d) => d.emoji + ' ' + d.date + ': ' + d.temperatureMin + ' to ' + d.temperatureMax + ' ' + $json.units.temperature).join('\\n') }}",
+        "parseMode": "none"
+      }
+    },
+    {
+      "id": "sorry",
+      "name": "Reply not found",
+      "type": "flowforge.telegram",
+      "typeVersion": 1,
+      "position": [
+        560,
+        110
+      ],
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "={{ $('On /weather').item.json.chatId }}",
+        "text": "=🤔 I could not find \"{{ $('On /weather').item.json.args }}\". Try: /weather Paris",
+        "parseMode": "none"
+      }
+    },
+    {
+      "id": "note",
+      "name": "How to use",
+      "type": "flowforge.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -330
+      ],
+      "parameters": {
+        "content": "## Telegram assistant\n1. Create a bot with **@BotFather** (`/newbot`) and copy the token.\n2. **Credentials**: add a **Telegram Bot** credential, or set `TELEGRAM_BOT_TOKEN` in `.env`.\n3. Switch the workflow to **Active**.\n4. In Telegram, open your bot, press **Start**, then send `/weather Paris`.\n5. To test in the editor instead: open **On /weather** → *Listen for test event*, then send the command.\n\nOnly one program can read a bot: do not use the same bot in n8n at the same time.",
+        "width": 580,
+        "height": 260,
+        "color": 4
+      }
+    }
+  ],
+  "connections": {
+    "On /weather": {
+      "main": [
+        [
+          {
+            "node": "Weather",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weather": {
+      "main": [
+        [
+          {
+            "node": "Reply",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply not found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {}
+}

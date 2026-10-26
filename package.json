@@ -1,0 +1,30 @@
+{
+  "name": "flowforge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "FlowForge: a visual workflow automation tool inspired by n8n",
+  "type": "module",
+  "workspaces": [
+    "shared",
+    "server",
+    "web"
+  ],
+  "engines": {
+    "node": ">=20.11"
+  },
+  "scripts": {
+    "start": "node scripts/start.mjs",
+    "build": "node scripts/build.mjs",
+    "dev": "npm run build -w shared && concurrently -k -n shared,server,web -c magenta,cyan,green \"npm run dev -w shared\" \"npm run dev -w server\" \"npm run dev -w web\"",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run build -w shared && npm run typecheck && npm run test --workspaces --if-present",
+    "test:e2e": "node scripts/build.mjs --if-stale && npm run test:e2e -w web",
+    "user:reset": "node scripts/build.mjs --if-stale && node server/dist/cli/user-reset.js",
+    "check": "node scripts/build.mjs --if-stale && node server/dist/cli/check.js",
+    "check:email": "node scripts/build.mjs --if-stale && node server/dist/cli/check-email.js"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.5",
+    "typescript": "~5.9.3"
+  }
+}

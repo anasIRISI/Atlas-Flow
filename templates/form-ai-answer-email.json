@@ -1,0 +1,127 @@
+{
+  "name": "Question form answered by AI",
+  "meta": {
+    "description": "A public form collects a question and an email address. Google Gemini writes the answer and it is emailed to the visitor.",
+    "categories": [
+      "AI",
+      "Forms",
+      "Email"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "form",
+      "name": "Ask a question",
+      "type": "flowforge.formTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "formTitle": "Ask our assistant",
+        "formDescription": "Type your question, the answer arrives by email.",
+        "formTheme": "midnight",
+        "formFields": {
+          "values": [
+            {
+              "id": "email",
+              "fieldLabel": "Email",
+              "fieldType": "email",
+              "requiredField": true,
+              "placeholder": "you@example.com"
+            },
+            {
+              "id": "question",
+              "fieldLabel": "Question",
+              "fieldType": "textarea",
+              "requiredField": true,
+              "placeholder": "What would you like to know?"
+            }
+          ]
+        },
+        "responseMode": "onReceived",
+        "options": {
+          "buttonLabel": "Ask",
+          "successTitle": "Thanks!",
+          "successMessage": "The answer is on its way to your inbox."
+        }
+      },
+      "webhookId": "form-ai-answer-template"
+    },
+    {
+      "id": "ai",
+      "name": "Write the answer",
+      "type": "flowforge.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        300,
+        0
+      ],
+      "parameters": {
+        "model": "default",
+        "prompt": "={{ $json.Question }}",
+        "systemInstruction": "You are a friendly support assistant. Answer clearly in under 150 words."
+      }
+    },
+    {
+      "id": "mail",
+      "name": "Email the answer",
+      "type": "flowforge.sendEmail",
+      "typeVersion": 1,
+      "position": [
+        580,
+        0
+      ],
+      "parameters": {
+        "toEmail": "={{ $('Ask a question').item.json.Email }}",
+        "subject": "Your answer",
+        "emailFormat": "template",
+        "templateTitle": "Here is your answer",
+        "templateMessage": "={{ $json.text }}",
+        "templateColor": "#f0592a"
+      }
+    },
+    {
+      "id": "note",
+      "name": "How to use",
+      "type": "flowforge.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -230
+      ],
+      "parameters": {
+        "content": "## Form + AI + email\n1. Add **Google Gemini API** and **SMTP** credentials.\n2. Open the form node, listen for a test event and submit the form.",
+        "width": 520,
+        "height": 140,
+        "color": 4
+      }
+    }
+  ],
+  "connections": {
+    "Ask a question": {
+      "main": [
+        [
+          {
+            "node": "Write the answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write the answer": {
+      "main": [
+        [
+          {
+            "node": "Email the answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {}
+}

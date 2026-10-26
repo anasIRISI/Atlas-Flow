@@ -1,0 +1,18 @@
+{
+  "name": "08 Stop and Error",
+  "nodes": [
+    { "id": "1", "name": "Start", "type": "flowforge.manualTrigger", "typeVersion": 1, "position": [0, 0], "parameters": {} },
+    {
+      "id": "2", "name": "Stock", "type": "flowforge.code", "typeVersion": 1, "position": [220, 0],
+      "parameters": { "jsCode": "return [{ product: 'Keyboard', stock: 0 }];" }
+    },
+    {
+      "id": "3", "name": "Out of stock", "type": "flowforge.stopAndError", "typeVersion": 1, "position": [440, 0],
+      "parameters": { "errorMessage": "={{ $json.product }} is out of stock" }
+    }
+  ],
+  "connections": {
+    "Start": { "main": [[{ "node": "Stock", "type": "main", "index": 0 }]] },
+    "Stock": { "main": [[{ "node": "Out of stock", "type": "main", "index": 0 }]] }
+  }
+}

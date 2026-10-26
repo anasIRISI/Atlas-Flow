@@ -1,0 +1,34 @@
+{
+  "name": "03 Merge with a branch that never runs",
+  "nodes": [
+    { "id": "1", "name": "Start", "type": "flowforge.manualTrigger", "typeVersion": 1, "position": [0, 100], "parameters": {} },
+    {
+      "id": "2", "name": "People", "type": "flowforge.code", "typeVersion": 1, "position": [220, 100],
+      "parameters": { "jsCode": "return [{ name: 'Ada', age: 36 }, { name: 'Alan', age: 41 }];" }
+    },
+    {
+      "id": "3", "name": "Adult?", "type": "flowforge.if", "typeVersion": 1, "position": [440, 100],
+      "parameters": {
+        "conditions": {
+          "conditions": [{ "leftValue": "={{ $json.age }}", "rightValue": 18, "operator": { "type": "number", "operation": "gte" } }],
+          "combinator": "and"
+        }
+      }
+    },
+    { "id": "4", "name": "Adults", "type": "flowforge.noOp", "typeVersion": 1, "position": [660, 0], "parameters": {} },
+    { "id": "5", "name": "Kids", "type": "flowforge.noOp", "typeVersion": 1, "position": [660, 200], "parameters": {} },
+    { "id": "6", "name": "Merge", "type": "flowforge.merge", "typeVersion": 1, "position": [880, 100], "parameters": { "mode": "append" } },
+    {
+      "id": "7", "name": "Count", "type": "flowforge.code", "typeVersion": 1, "position": [1100, 100],
+      "parameters": { "jsCode": "return [{ json: { people: $input.all().length, names: $input.all().map(i => i.json.name) } }];" }
+    }
+  ],
+  "connections": {
+    "Start": { "main": [[{ "node": "People", "type": "main", "index": 0 }]] },
+    "People": { "main": [[{ "node": "Adult?", "type": "main", "index": 0 }]] },
+    "Adult?": { "main": [[{ "node": "Adults", "type": "main", "index": 0 }], [{ "node": "Kids", "type": "main", "index": 0 }]] },
+    "Adults": { "main": [[{ "node": "Merge", "type": "main", "index": 0 }]] },
+    "Kids": { "main": [[{ "node": "Merge", "type": "main", "index": 1 }]] },
+    "Merge": { "main": [[{ "node": "Count", "type": "main", "index": 0 }]] }
+  }
+}

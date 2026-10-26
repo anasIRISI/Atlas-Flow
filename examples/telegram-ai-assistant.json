@@ -1,0 +1,187 @@
+{
+  "name": "Telegram AI assistant (Agent + memory + tools)",
+  "meta": {
+    "description": "A Telegram bot with a brain: an AI Agent (Gemini) that remembers each chat and can check the weather and calculate. Works without a public URL."
+  },
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "Telegram Trigger",
+      "type": "flowforge.telegramTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "updates": [
+          "message"
+        ]
+      }
+    },
+    {
+      "id": "agent",
+      "name": "AI Agent",
+      "type": "flowforge.aiAgent",
+      "typeVersion": 1,
+      "position": [
+        300,
+        0
+      ],
+      "parameters": {
+        "prompt": "={{ $json.text || 'Hello' }}",
+        "systemMessage": "You are a friendly assistant. Answer in the language of the user, in a few short sentences. Use the get_weather tool for any question about the weather or what to wear, and the calculator tool for any calculation. If a tool fails, say so honestly. You are talking on Telegram: plain text only, no Markdown."
+      }
+    },
+    {
+      "id": "model",
+      "name": "Gemini Chat Model",
+      "type": "flowforge.geminiChatModel",
+      "typeVersion": 1,
+      "position": [
+        165,
+        200
+      ],
+      "parameters": {
+        "model": "default"
+      }
+    },
+    {
+      "id": "memory",
+      "name": "Simple Memory",
+      "type": "flowforge.simpleMemory",
+      "typeVersion": 1,
+      "position": [
+        315,
+        200
+      ],
+      "parameters": {
+        "sessionKey": "={{ $json.chatId }}",
+        "contextWindow": 10
+      }
+    },
+    {
+      "id": "weather",
+      "name": "Weather Tool",
+      "type": "flowforge.weatherTool",
+      "typeVersion": 1,
+      "position": [
+        465,
+        200
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "calc",
+      "name": "Calculator",
+      "type": "flowforge.calculatorTool",
+      "typeVersion": 1,
+      "position": [
+        615,
+        200
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "reply",
+      "name": "Reply",
+      "type": "flowforge.telegram",
+      "typeVersion": 1,
+      "position": [
+        720,
+        0
+      ],
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "={{ $('Telegram Trigger').item.json.chatId }}",
+        "text": "={{ $json.output }}",
+        "parseMode": "none"
+      }
+    },
+    {
+      "id": "note",
+      "name": "How to use",
+      "type": "flowforge.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -340
+      ],
+      "parameters": {
+        "content": "## Telegram AI assistant\n1. **Credentials**: add a **Telegram Bot** credential (token from @BotFather) and a **Google Gemini API** credential (key from aistudio.google.com/apikey). Or set `TELEGRAM_BOT_TOKEN` and `GEMINI_API_KEY` in `.env`.\n2. Switch the workflow to **Active**.\n3. In Telegram, open your bot, press **Start** and ask: *What is the weather in Paris? Should I take an umbrella?* then *And in Tokyo?* (it remembers the topic).\n4. Open an execution to see what the agent did: the model, the memory and each tool show their own runs.\n\nUse this bot only in FlowForge (one reader per bot).",
+        "width": 640,
+        "height": 280,
+        "color": 4
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weather Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {}
+}

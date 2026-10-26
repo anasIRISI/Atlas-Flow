@@ -1,0 +1,81 @@
+{
+  "name": "14 Wait 90 seconds (restart test)",
+  "nodes": [
+    {
+      "id": "1",
+      "name": "Webhook",
+      "type": "flowforge.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "path": "demo/slow",
+        "httpMethod": "POST",
+        "responseMode": "onReceived"
+      }
+    },
+    {
+      "id": "2",
+      "name": "Wait 90 s",
+      "type": "flowforge.wait",
+      "typeVersion": 1,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": 90,
+        "unit": "seconds"
+      }
+    },
+    {
+      "id": "3",
+      "name": "Done",
+      "type": "flowforge.set",
+      "typeVersion": 1,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a",
+              "name": "finishedAt",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Wait 90 s",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 90 s": {
+      "main": [
+        [
+          {
+            "node": "Done",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

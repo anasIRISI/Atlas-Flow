@@ -1,0 +1,105 @@
+{
+  "name": "Webhook alert to Telegram",
+  "meta": {
+    "description": "A public webhook URL receives any JSON (a form, a payment tool, a script) and forwards a formatted alert to a Telegram chat, then answers the caller.",
+    "categories": [
+      "Webhooks",
+      "Messaging"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "wh",
+      "name": "Incoming alert",
+      "type": "flowforge.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "alert-to-telegram",
+        "responseMode": "lastNode"
+      },
+      "webhookId": "alert-to-telegram-template"
+    },
+    {
+      "id": "fmt",
+      "name": "Format message",
+      "type": "flowforge.set",
+      "typeVersion": 1,
+      "position": [
+        280,
+        0
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "text",
+              "value": "=🔔 {{ $json.body.title || 'New alert' }}\n{{ $json.body.message || JSON.stringify($json.body) }}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "tg",
+      "name": "Send to Telegram",
+      "type": "flowforge.telegram",
+      "typeVersion": 1,
+      "position": [
+        560,
+        0
+      ],
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "",
+        "text": "={{ $json.text }}"
+      }
+    },
+    {
+      "id": "note",
+      "name": "How to use",
+      "type": "flowforge.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -250
+      ],
+      "parameters": {
+        "content": "## Webhook alert to Telegram\n1. Add a **Telegram** credential (bot token from @BotFather) and set the chat id.\n2. Open **Incoming alert**, copy the test URL and POST `{\"title\":\"Hi\",\"message\":\"It works\"}`.\n3. Activate the workflow to use the production URL.",
+        "width": 560,
+        "height": 190,
+        "color": 4
+      }
+    }
+  ],
+  "connections": {
+    "Incoming alert": {
+      "main": [
+        [
+          {
+            "node": "Format message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format message": {
+      "main": [
+        [
+          {
+            "node": "Send to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {}
+}

@@ -1,0 +1,27 @@
+{
+  "name": "01 Hello world",
+  "nodes": [
+    { "id": "1", "name": "Start", "type": "flowforge.manualTrigger", "typeVersion": 1, "position": [0, 0], "parameters": {} },
+    {
+      "id": "2", "name": "Make users", "type": "flowforge.code", "typeVersion": 1, "position": [220, 0],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [\n  { name: 'Ada', age: 36 },\n  { name: 'Alan', age: 41 },\n  { name: 'Grace', age: 85 }\n];"
+      }
+    },
+    {
+      "id": "3", "name": "Greet", "type": "flowforge.set", "typeVersion": 1, "position": [440, 0],
+      "parameters": {
+        "includeOtherFields": true,
+        "assignments": { "assignments": [
+          { "name": "greeting", "value": "=Hello {{ $json.name }}, next year you will be {{ $json.age + 1 }}", "type": "string" },
+          { "name": "workflow", "value": "={{ $workflow.name }}", "type": "string" }
+        ] }
+      }
+    }
+  ],
+  "connections": {
+    "Start": { "main": [[{ "node": "Make users", "type": "main", "index": 0 }]] },
+    "Make users": { "main": [[{ "node": "Greet", "type": "main", "index": 0 }]] }
+  }
+}

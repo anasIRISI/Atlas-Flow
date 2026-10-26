@@ -1,0 +1,137 @@
+{
+  "name": "Contact form → Discord embed + confirmation email",
+  "meta": {
+    "description": "A public contact form (QR code for phones). Each answer is posted to a Discord channel as a rich embed and the visitor gets a confirmation email."
+  },
+  "nodes": [
+    {
+      "id": "form",
+      "name": "Contact form",
+      "type": "flowforge.formTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "contact-discord-example",
+      "parameters": {
+        "formTitle": "Contact us",
+        "formDescription": "Leave us a message. You will get a confirmation by email.",
+        "formTheme": "midnight",
+        "formFields": {
+          "values": [
+            {
+              "id": "name",
+              "fieldLabel": "Name",
+              "fieldType": "text",
+              "requiredField": true,
+              "placeholder": "Your name"
+            },
+            {
+              "id": "email",
+              "fieldLabel": "Email",
+              "fieldType": "email",
+              "requiredField": true,
+              "placeholder": "you@example.com"
+            },
+            {
+              "id": "message",
+              "fieldLabel": "Message",
+              "fieldType": "textarea",
+              "requiredField": true,
+              "placeholder": "How can we help?"
+            }
+          ]
+        },
+        "responseMode": "onReceived",
+        "options": {
+          "successTitle": "Thank you!",
+          "successMessage": "We received your message. Check your inbox for the confirmation."
+        }
+      }
+    },
+    {
+      "id": "discord",
+      "name": "Post to Discord",
+      "type": "flowforge.discord",
+      "typeVersion": 1,
+      "position": [
+        300,
+        -110
+      ],
+      "parameters": {
+        "operation": "sendMessage",
+        "content": "📬 **New contact form message**",
+        "embeds": {
+          "embed": [
+            {
+              "title": "={{ $json.Name }}",
+              "description": "={{ $json.Message }}",
+              "color": "#5865F2",
+              "footerText": "FlowForge contact form",
+              "timestamp": "now",
+              "fieldsJson": "={{ [{ name: 'Email', value: $json.Email, inline: true }, { name: 'Received', value: $now.toFormat('d LLL yyyy, HH:mm'), inline: true }] }}"
+            }
+          ]
+        },
+        "options": {
+          "username": "FlowForge"
+        }
+      }
+    },
+    {
+      "id": "confirm",
+      "name": "Send confirmation",
+      "type": "flowforge.sendEmail",
+      "typeVersion": 1,
+      "position": [
+        300,
+        110
+      ],
+      "parameters": {
+        "toEmail": "={{ $json.Email }}",
+        "subject": "We received your message",
+        "emailFormat": "template",
+        "templateTitle": "=Thanks, {{ $json.Name }}!",
+        "templateMessage": "=We received your message and will answer soon.\n\nHere is a copy of what you sent:\n\n{{ $json.Message }}",
+        "templateFooter": "You receive this email because you filled in our contact form.",
+        "templateColor": "#5865F2"
+      }
+    },
+    {
+      "id": "note",
+      "name": "How to use",
+      "type": "flowforge.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -400
+      ],
+      "parameters": {
+        "content": "## Contact form → Discord + email\n1. **Credentials**: add a **Discord Webhook** credential (channel settings → Integrations → Webhooks → Copy Webhook URL) and an **SMTP** credential. Or set `DISCORD_WEBHOOK_URL` and `SMTP_*` in `.env`.\n2. Open **Contact form** → *Listen for test event*, then scan the QR code with your phone and submit.\n3. The message appears in Discord and the visitor gets an email.\n4. Switch the workflow to **Active** and share the production URL.",
+        "width": 580,
+        "height": 240,
+        "color": 4
+      }
+    }
+  ],
+  "connections": {
+    "Contact form": {
+      "main": [
+        [
+          {
+            "node": "Post to Discord",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {}
+}

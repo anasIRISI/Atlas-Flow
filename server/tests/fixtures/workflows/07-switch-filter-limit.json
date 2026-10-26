@@ -1,0 +1,181 @@
+{
+  "name": "07 Switch, Filter and Limit",
+  "nodes": [
+    {
+      "id": "1",
+      "name": "Start",
+      "type": "flowforge.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        100
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "2",
+      "name": "Tickets",
+      "type": "flowforge.code",
+      "typeVersion": 1,
+      "position": [
+        220,
+        100
+      ],
+      "parameters": {
+        "jsCode": "return [\n  { id: 1, priority: 'high', title: 'Server down' },\n  { id: 2, priority: 'low', title: 'Typo on page' },\n  { id: 3, priority: 'high', title: 'Payment failed' },\n  { id: 4, priority: 'medium', title: 'Slow search' },\n  { id: 5, priority: 'urgent?', title: 'Unknown' }\n];"
+      }
+    },
+    {
+      "id": "3",
+      "name": "Route by priority",
+      "type": "flowforge.switch",
+      "typeVersion": 1,
+      "position": [
+        440,
+        100
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.priority }}",
+                    "rightValue": "high",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "high"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.priority }}",
+                    "rightValue": "low",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "low"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      }
+    },
+    {
+      "id": "4",
+      "name": "First high",
+      "type": "flowforge.limit",
+      "typeVersion": 1,
+      "position": [
+        660,
+        -80
+      ],
+      "parameters": {
+        "maxItems": 1
+      }
+    },
+    {
+      "id": "5",
+      "name": "Low",
+      "type": "flowforge.noOp",
+      "typeVersion": 1,
+      "position": [
+        660,
+        100
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "6",
+      "name": "Known priority only",
+      "type": "flowforge.filter",
+      "typeVersion": 1,
+      "position": [
+        660,
+        280
+      ],
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.priority }}",
+              "rightValue": "^(low|medium|high)$",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "keepDiscarded": true
+      }
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Tickets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tickets": {
+      "main": [
+        [
+          {
+            "node": "Route by priority",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by priority": {
+      "main": [
+        [
+          {
+            "node": "First high",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Low",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Known priority only",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,290 @@
+{
+  "name": "REST API with Webhook, Switch and Respond to Webhook",
+  "meta": {
+    "description": "A tiny REST API in four nodes: a POST webhook checks the request with IF, routes it with Switch (create, get, delete) and answers with a different HTTP status code (201, 200, 204, 422, 400) using Respond to Webhook nodes.",
+    "categories": [
+      "Webhooks",
+      "Utilities"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "hook",
+      "name": "API endpoint",
+      "type": "flowforge.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "flowforge-api",
+        "responseMode": "responseNode"
+      },
+      "webhookId": "rest-api-example"
+    },
+    {
+      "id": "valid",
+      "name": "Has an action?",
+      "type": "flowforge.if",
+      "typeVersion": 1,
+      "position": [
+        260,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.body.action }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "route",
+      "name": "Route by action",
+      "type": "flowforge.switch",
+      "typeVersion": 1,
+      "position": [
+        540,
+        -120
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "create",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "create"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "get",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "get"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "delete",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "delete"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      }
+    },
+    {
+      "id": "created",
+      "name": "201 Created",
+      "type": "flowforge.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        840,
+        -300
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"created\": true, \"item\": {{ JSON.stringify($('API endpoint').item.json.body.item ?? null) }} }",
+        "options": {
+          "responseCode": 201
+        }
+      }
+    },
+    {
+      "id": "got",
+      "name": "200 Item",
+      "type": "flowforge.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        840,
+        -150
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"id\": \"{{ $('API endpoint').item.json.body.id ?? 1 }}\", \"name\": \"Sample item\", \"servedAt\": \"{{ $now.toISO() }}\" }",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": [
+            {
+              "name": "X-Powered-By",
+              "value": "FlowForge"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "deleted",
+      "name": "204 Deleted",
+      "type": "flowforge.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        840,
+        0
+      ],
+      "parameters": {
+        "respondWith": "noData",
+        "options": {
+          "responseCode": 204
+        }
+      }
+    },
+    {
+      "id": "unknown",
+      "name": "422 Unknown action",
+      "type": "flowforge.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        840,
+        150
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"error\": \"Unknown action\", \"allowed\": [\"create\", \"get\", \"delete\"] }",
+        "options": {
+          "responseCode": 422
+        }
+      }
+    },
+    {
+      "id": "bad",
+      "name": "400 Missing action",
+      "type": "flowforge.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        540,
+        160
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{ \"error\": \"Send a JSON body with an action field\" }",
+        "options": {
+          "responseCode": 400
+        }
+      }
+    },
+    {
+      "id": "note",
+      "name": "How to use",
+      "type": "flowforge.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -420
+      ],
+      "parameters": {
+        "content": "## REST API with a webhook\n1. Activate the workflow (toggle at the top).\n2. Open the Webhook node and copy the **Production URL**.\n3. Try it:\n`curl -X POST <url> -H 'Content-Type: application/json' -d '{\"action\":\"create\",\"item\":{\"name\":\"Book\"}}'` answers **201**.\n`get` answers 200, `delete` answers 204, another action 422, no action 400.\nThe IF node checks the request, the Switch picks the route, each **Respond to Webhook** node sets its own status code."
+      }
+    }
+  ],
+  "connections": {
+    "API endpoint": {
+      "main": [
+        [
+          {
+            "node": "Has an action?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has an action?": {
+      "main": [
+        [
+          {
+            "node": "Route by action",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "400 Missing action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by action": {
+      "main": [
+        [
+          {
+            "node": "201 Created",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "200 Item",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "204 Deleted",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "422 Unknown action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

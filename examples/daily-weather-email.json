@@ -1,0 +1,110 @@
+{
+  "name": "Daily weather → HTML email",
+  "meta": {
+    "description": "Every morning at 07:30: the weather of your city (Open-Meteo, no key) arrives as a designed email with the forecast of the next days."
+  },
+  "nodes": [
+    {
+      "id": "schedule",
+      "name": "Every morning",
+      "type": "flowforge.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1,
+              "triggerAtHour": 7,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "weather",
+      "name": "Weather",
+      "type": "flowforge.openMeteo",
+      "typeVersion": 1,
+      "position": [
+        280,
+        0
+      ],
+      "parameters": {
+        "operation": "getWeather",
+        "locationMode": "city",
+        "city": "Paris",
+        "include": [
+          "current",
+          "daily"
+        ],
+        "forecastDays": 4
+      }
+    },
+    {
+      "id": "email",
+      "name": "Send forecast",
+      "type": "flowforge.sendEmail",
+      "typeVersion": 1,
+      "position": [
+        560,
+        0
+      ],
+      "parameters": {
+        "toEmail": "you@example.com",
+        "subject": "={{ $json.current.emoji }} Weather in {{ $json.location.name }}: {{ $json.current.temperature }} {{ $json.units.temperature }}, {{ $json.current.description }}",
+        "emailFormat": "template",
+        "templateTitle": "={{ $json.current.emoji }} {{ $json.location.name }}, {{ $now.toFormat('cccc d LLLL') }}",
+        "templateMessage": "={{ $json.summary }}\n\n**Next days**\n{{ $json.daily.map((d) => d.emoji + ' ' + d.date + ': ' + d.temperatureMin + ' to ' + d.temperatureMax + ' ' + $json.units.temperature + ', ' + d.description).join('\\n') }}",
+        "templateFooter": "={{ $json.attribution }}. Sent by the FlowForge workflow \"Daily weather → HTML email\".",
+        "templateColor": "#0ea5e9"
+      }
+    },
+    {
+      "id": "note",
+      "name": "How to use",
+      "type": "flowforge.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -300
+      ],
+      "parameters": {
+        "content": "## Daily weather → HTML email\n1. **Credentials**: add an SMTP credential (Gmail App Password or Brevo), or set `SMTP_*` in `.env`. The weather needs no key.\n2. Open **Weather** and type your city.\n3. Open **Send forecast** and put your address in **To Email**.\n4. Click **Execute workflow** to get the email now.\n5. Switch the workflow to **Active**: it then runs every day at 07:30.",
+        "width": 560,
+        "height": 230,
+        "color": 4
+      }
+    }
+  ],
+  "connections": {
+    "Every morning": {
+      "main": [
+        [
+          {
+            "node": "Weather",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weather": {
+      "main": [
+        [
+          {
+            "node": "Send forecast",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {}
+}

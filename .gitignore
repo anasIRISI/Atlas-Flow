@@ -1,0 +1,13 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.env
+data/
+.e2e-data/
+web/test-results/
+web/playwright-report/
+.DS_Store
+*.log
+
+# Local AI assistant notes (kept on this computer only)
+CLAUDE.md

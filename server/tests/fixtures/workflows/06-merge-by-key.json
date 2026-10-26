@@ -1,0 +1,32 @@
+{
+  "name": "06 Merge users and orders by id",
+  "nodes": [
+    { "id": "1", "name": "Start", "type": "flowforge.manualTrigger", "typeVersion": 1, "position": [0, 100], "parameters": {} },
+    {
+      "id": "2", "name": "Users", "type": "flowforge.code", "typeVersion": 1, "position": [220, 0],
+      "parameters": { "jsCode": "return [{ userId: 1, name: 'Ada' }, { userId: 2, name: 'Alan' }, { userId: 3, name: 'Grace' }];" }
+    },
+    {
+      "id": "3", "name": "Orders", "type": "flowforge.code", "typeVersion": 1, "position": [220, 200],
+      "parameters": { "jsCode": "return [{ customer: 1, total: 120 }, { customer: 3, total: 75 }];" }
+    },
+    {
+      "id": "4", "name": "Enrich users", "type": "flowforge.merge", "typeVersion": 1, "position": [440, 100],
+      "parameters": {
+        "mode": "combine", "combineBy": "combineByFields", "fieldsHaveDifferentNames": true,
+        "mergeByFields": { "values": [{ "field1": "userId", "field2": "customer" }] },
+        "joinMode": "enrichInput1"
+      }
+    },
+    {
+      "id": "5", "name": "Sort by total", "type": "flowforge.sort", "typeVersion": 1, "position": [660, 100],
+      "parameters": { "sortFieldsUi": { "sortField": [{ "fieldName": "total", "order": "descending" }] } }
+    }
+  ],
+  "connections": {
+    "Start": { "main": [[{ "node": "Users", "type": "main", "index": 0 }, { "node": "Orders", "type": "main", "index": 0 }]] },
+    "Users": { "main": [[{ "node": "Enrich users", "type": "main", "index": 0 }]] },
+    "Orders": { "main": [[{ "node": "Enrich users", "type": "main", "index": 1 }]] },
+    "Enrich users": { "main": [[{ "node": "Sort by total", "type": "main", "index": 0 }]] }
+  }
+}

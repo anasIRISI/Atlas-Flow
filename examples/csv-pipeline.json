@@ -1,0 +1,326 @@
+{
+  "name": "CSV pipeline: read, transform, summarize, save",
+  "meta": {
+    "description": "Writes a sales CSV to disk, reads it back, parses the rows, adds a revenue column, sums revenue per region, sorts the result and saves a report CSV. Shows the file, transform and summarize nodes working together.",
+    "categories": [
+      "Data",
+      "Utilities"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "start",
+      "name": "Start",
+      "type": "flowforge.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "sample",
+      "name": "Sample sales CSV",
+      "type": "flowforge.code",
+      "typeVersion": 1,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// A small CSV text, as if it came from an export.\nreturn [{ csv: \"region,product,qty,price\\nNorth,Laptop,3,900\\nSouth,Phone,10,400\\nNorth,Phone,4,420\\nEast,Tablet,6,300\\nSouth,Laptop,2,950\\nEast,Phone,5,410\\n\" }];"
+      }
+    },
+    {
+      "id": "tofile",
+      "name": "Make sales.csv",
+      "type": "flowforge.convertToFile",
+      "typeVersion": 1,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "operation": "text",
+        "sourceProperty": "csv",
+        "binaryPropertyName": "data",
+        "options": {
+          "fileName": "sales.csv"
+        }
+      }
+    },
+    {
+      "id": "write",
+      "name": "Save sales.csv",
+      "type": "flowforge.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        720,
+        0
+      ],
+      "parameters": {
+        "operation": "write",
+        "fileName": "flowforge-demo/sales.csv",
+        "dataPropertyName": "data"
+      }
+    },
+    {
+      "id": "read",
+      "name": "Read it back",
+      "type": "flowforge.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        960,
+        0
+      ],
+      "parameters": {
+        "operation": "read",
+        "fileSelector": "flowforge-demo/sales.csv",
+        "options": {
+          "dataPropertyName": "data"
+        }
+      }
+    },
+    {
+      "id": "parse",
+      "name": "Parse CSV rows",
+      "type": "flowforge.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        0
+      ],
+      "parameters": {
+        "operation": "csv",
+        "binaryPropertyName": "data"
+      }
+    },
+    {
+      "id": "rev",
+      "name": "Add revenue",
+      "type": "flowforge.set",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        0
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            {
+              "name": "revenue",
+              "value": "={{ $json.qty * $json.price }}",
+              "type": "number"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "sum",
+      "name": "Revenue per region",
+      "type": "flowforge.summarize",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        0
+      ],
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "sum",
+              "field": "revenue"
+            },
+            {
+              "aggregation": "sum",
+              "field": "qty"
+            }
+          ]
+        },
+        "fieldsToSplitBy": "region"
+      }
+    },
+    {
+      "id": "sort",
+      "name": "Best region first",
+      "type": "flowforge.sort",
+      "typeVersion": 1,
+      "position": [
+        1920,
+        0
+      ],
+      "parameters": {
+        "type": "simple",
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "sum_revenue",
+              "order": "descending"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "report",
+      "name": "Make report.csv",
+      "type": "flowforge.convertToFile",
+      "typeVersion": 1,
+      "position": [
+        2160,
+        0
+      ],
+      "parameters": {
+        "operation": "csv",
+        "binaryPropertyName": "data",
+        "options": {
+          "fileName": "revenue-report.csv"
+        }
+      }
+    },
+    {
+      "id": "save",
+      "name": "Save report",
+      "type": "flowforge.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        2400,
+        0
+      ],
+      "parameters": {
+        "operation": "write",
+        "fileName": "flowforge-demo/revenue-report.csv",
+        "dataPropertyName": "data"
+      }
+    },
+    {
+      "id": "note",
+      "name": "How to use",
+      "type": "flowforge.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -300
+      ],
+      "parameters": {
+        "content": "## CSV pipeline\nClick **Execute workflow**. It writes a CSV file, reads it back, parses the rows, computes the revenue, sums it per region, sorts it and saves **revenue-report.csv**.\nFiles live in `data/files/flowforge-demo/` (file nodes are limited to that folder). Open the **Binary** tab of a file node to download the file."
+      }
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Sample sales CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sample sales CSV": {
+      "main": [
+        [
+          {
+            "node": "Make sales.csv",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Make sales.csv": {
+      "main": [
+        [
+          {
+            "node": "Save sales.csv",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save sales.csv": {
+      "main": [
+        [
+          {
+            "node": "Read it back",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read it back": {
+      "main": [
+        [
+          {
+            "node": "Parse CSV rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse CSV rows": {
+      "main": [
+        [
+          {
+            "node": "Add revenue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add revenue": {
+      "main": [
+        [
+          {
+            "node": "Revenue per region",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Revenue per region": {
+      "main": [
+        [
+          {
+            "node": "Best region first",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Best region first": {
+      "main": [
+        [
+          {
+            "node": "Make report.csv",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Make report.csv": {
+      "main": [
+        [
+          {
+            "node": "Save report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

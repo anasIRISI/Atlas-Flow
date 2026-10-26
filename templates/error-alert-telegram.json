@@ -1,0 +1,100 @@
+{
+  "name": "Error alert to Telegram",
+  "meta": {
+    "description": "Attach this as the error workflow of any other workflow: when that one fails you get a Telegram message with the workflow name, the failing node and the error.",
+    "categories": [
+      "Utilities",
+      "Messaging"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "err",
+      "name": "Error Trigger",
+      "type": "flowforge.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "fmt",
+      "name": "Describe the failure",
+      "type": "flowforge.set",
+      "typeVersion": 1,
+      "position": [
+        280,
+        0
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "text",
+              "value": "=❌ Workflow \"{{ $json.workflow.name }}\" failed\nNode: {{ $json.execution.lastNodeExecuted }}\n{{ $json.execution.error.message }}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "tg",
+      "name": "Notify on Telegram",
+      "type": "flowforge.telegram",
+      "typeVersion": 1,
+      "position": [
+        560,
+        0
+      ],
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "",
+        "text": "={{ $json.text }}"
+      }
+    },
+    {
+      "id": "note",
+      "name": "How to use",
+      "type": "flowforge.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -220
+      ],
+      "parameters": {
+        "content": "## Error alert\n1. Add a Telegram credential and the chat id.\n2. In another workflow open **Settings → Error workflow** and pick this one.",
+        "width": 520,
+        "height": 140,
+        "color": 4
+      }
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Describe the failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Describe the failure": {
+      "main": [
+        [
+          {
+            "node": "Notify on Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {}
+}

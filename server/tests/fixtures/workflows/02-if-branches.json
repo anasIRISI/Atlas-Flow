@@ -1,0 +1,32 @@
+{
+  "name": "02 IF branches",
+  "nodes": [
+    { "id": "1", "name": "Start", "type": "flowforge.manualTrigger", "typeVersion": 1, "position": [0, 100], "parameters": {} },
+    {
+      "id": "2", "name": "People", "type": "flowforge.code", "typeVersion": 1, "position": [220, 100],
+      "parameters": { "jsCode": "return [{ name: 'Ada', age: 36 }, { name: 'Alan', age: 41 }, { name: 'Grace', age: 85 }];" }
+    },
+    {
+      "id": "3", "name": "Older than 40?", "type": "flowforge.if", "typeVersion": 1, "position": [440, 100],
+      "parameters": {
+        "conditions": {
+          "conditions": [{ "leftValue": "={{ $json.age }}", "rightValue": 40, "operator": { "type": "number", "operation": "gt" } }],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "4", "name": "Senior", "type": "flowforge.set", "typeVersion": 1, "position": [660, 0],
+      "parameters": { "includeOtherFields": true, "assignments": { "assignments": [{ "name": "group", "value": "senior", "type": "string" }] } }
+    },
+    {
+      "id": "5", "name": "Junior", "type": "flowforge.set", "typeVersion": 1, "position": [660, 200],
+      "parameters": { "includeOtherFields": true, "assignments": { "assignments": [{ "name": "group", "value": "junior", "type": "string" }] } }
+    }
+  ],
+  "connections": {
+    "Start": { "main": [[{ "node": "People", "type": "main", "index": 0 }]] },
+    "People": { "main": [[{ "node": "Older than 40?", "type": "main", "index": 0 }]] },
+    "Older than 40?": { "main": [[{ "node": "Senior", "type": "main", "index": 0 }], [{ "node": "Junior", "type": "main", "index": 0 }]] }
+  }
+}

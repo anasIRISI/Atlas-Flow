@@ -1,0 +1,453 @@
+{
+  "name": "Resilience demo: retry, continue on fail, error output, error workflow, sub-workflow",
+  "meta": {
+    "description": "Three linked workflows that show how FlowForge handles failures: retry on fail, continue on fail, a red error output, a Stop and Error that starts a separate Error Trigger workflow, and a sub-workflow called with Execute Workflow. Imported together.",
+    "categories": [
+      "Utilities",
+      "Webhooks"
+    ]
+  },
+  "workflows": [
+    {
+      "key": "main",
+      "name": "Resilience demo",
+      "nodes": [
+        {
+          "id": "manual",
+          "name": "Run by hand",
+          "type": "flowforge.manualTrigger",
+          "typeVersion": 1,
+          "position": [
+            0,
+            -120
+          ],
+          "parameters": {}
+        },
+        {
+          "id": "hook",
+          "name": "Call from outside",
+          "type": "flowforge.webhook",
+          "typeVersion": 1,
+          "position": [
+            0,
+            100
+          ],
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "resilience-demo",
+            "responseMode": "onReceived"
+          },
+          "webhookId": "resilience-example"
+        },
+        {
+          "id": "orders",
+          "name": "Orders",
+          "type": "flowforge.code",
+          "typeVersion": 1,
+          "position": [
+            280,
+            0
+          ],
+          "parameters": {
+            "jsCode": "// POST {\"crash\": true} to make the whole run fail at the end (the error workflow then runs).\nconst crash = $input.first()?.json?.body?.crash === true;\nreturn [\n  { id: 1, qty: 2, price: 10, country: 'FR' },\n  { id: 2, qty: -1, price: 25, country: 'FR' },\n  { id: 3, qty: 5, price: 4, country: 'XX' },\n].map(o => ({ ...o, crash }));"
+          }
+        },
+        {
+          "id": "validate",
+          "name": "Validate order",
+          "type": "flowforge.code",
+          "typeVersion": 1,
+          "position": [
+            560,
+            0
+          ],
+          "parameters": {
+            "mode": "runOnceForEachItem",
+            "jsCodeEachItem": "if ($json.qty < 0) throw new Error('Order ' + $json.id + ' has a negative quantity');\nreturn { ...$json, valid: true };"
+          },
+          "retryOnFail": true,
+          "maxTries": 2,
+          "waitBetweenTries": 0,
+          "onError": "continueErrorOutput",
+          "notes": "Retry on fail (2 tries), then the failing item leaves by the red error output."
+        },
+        {
+          "id": "problem",
+          "name": "Report invalid order",
+          "type": "flowforge.set",
+          "typeVersion": 1,
+          "position": [
+            840,
+            200
+          ],
+          "parameters": {
+            "mode": "manual",
+            "assignments": {
+              "assignments": [
+                {
+                  "name": "alert",
+                  "value": "=Skipped: {{ $json.error }}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": "sub",
+          "name": "Calculate price (sub-workflow)",
+          "type": "flowforge.executeWorkflow",
+          "typeVersion": 1,
+          "position": [
+            840,
+            -100
+          ],
+          "parameters": {
+            "source": "database",
+            "workflowId": "ref:sub",
+            "mode": "once"
+          }
+        },
+        {
+          "id": "tax",
+          "name": "Look up tax rate",
+          "type": "flowforge.code",
+          "typeVersion": 1,
+          "position": [
+            1120,
+            -100
+          ],
+          "parameters": {
+            "mode": "runOnceForEachItem",
+            "jsCodeEachItem": "if ($json.country === 'XX') throw new Error('No tax rate for country ' + $json.country);\nreturn { ...$json, tax: Math.round($json.total * 0.2 * 100) / 100 };"
+          },
+          "onError": "continueRegularOutput",
+          "notes": "Continue on fail: the item goes on with an error field instead of stopping the run."
+        },
+        {
+          "id": "crash",
+          "name": "Crash requested?",
+          "type": "flowforge.if",
+          "typeVersion": 1,
+          "position": [
+            1400,
+            -100
+          ],
+          "parameters": {
+            "conditions": {
+              "conditions": [
+                {
+                  "leftValue": "={{ $json.crash }}",
+                  "rightValue": "",
+                  "operator": {
+                    "type": "boolean",
+                    "operation": "true",
+                    "singleValue": true
+                  }
+                }
+              ],
+              "combinator": "and"
+            }
+          }
+        },
+        {
+          "id": "stop",
+          "name": "Stop and Error",
+          "type": "flowforge.stopAndError",
+          "typeVersion": 1,
+          "position": [
+            1680,
+            -200
+          ],
+          "parameters": {
+            "errorType": "errorMessage",
+            "errorMessage": "Crash requested by the caller (resilience demo)"
+          }
+        },
+        {
+          "id": "done",
+          "name": "All good",
+          "type": "flowforge.noOp",
+          "typeVersion": 1,
+          "position": [
+            1680,
+            0
+          ],
+          "parameters": {}
+        },
+        {
+          "id": "note",
+          "name": "How to use",
+          "type": "flowforge.stickyNote",
+          "typeVersion": 1,
+          "position": [
+            -40,
+            -420
+          ],
+          "parameters": {
+            "content": "## Resilience demo (3 workflows)\n**Run it by hand**: Execute workflow. Order 2 fails validation and leaves by the error output; order 3 fails the tax lookup but continues with an error field; the sub-workflow computes the totals.\n**See the error workflow**: Activate, then `curl -X POST <Production URL> -H 'Content-Type: application/json' -d '{\"crash\":true}'`. The run fails on purpose and the workflow **Resilience: error handler** starts and writes `data/files/flowforge-demo/errors.log`.\nImport created all three workflows together."
+          }
+        }
+      ],
+      "connections": {
+        "Run by hand": {
+          "main": [
+            [
+              {
+                "node": "Orders",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Call from outside": {
+          "main": [
+            [
+              {
+                "node": "Orders",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Orders": {
+          "main": [
+            [
+              {
+                "node": "Validate order",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Validate order": {
+          "main": [
+            [
+              {
+                "node": "Calculate price (sub-workflow)",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "Report invalid order",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Calculate price (sub-workflow)": {
+          "main": [
+            [
+              {
+                "node": "Look up tax rate",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Look up tax rate": {
+          "main": [
+            [
+              {
+                "node": "Crash requested?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Crash requested?": {
+          "main": [
+            [
+              {
+                "node": "Stop and Error",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "All good",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      },
+      "settings": {
+        "errorWorkflow": "ref:error"
+      }
+    },
+    {
+      "key": "sub",
+      "name": "Resilience: calculate price (sub-workflow)",
+      "nodes": [
+        {
+          "id": "t",
+          "name": "When executed by another workflow",
+          "type": "flowforge.executeWorkflowTrigger",
+          "typeVersion": 1,
+          "position": [
+            0,
+            0
+          ],
+          "parameters": {}
+        },
+        {
+          "id": "calc",
+          "name": "Compute total",
+          "type": "flowforge.set",
+          "typeVersion": 1,
+          "position": [
+            280,
+            0
+          ],
+          "parameters": {
+            "mode": "manual",
+            "includeOtherFields": true,
+            "assignments": {
+              "assignments": [
+                {
+                  "name": "total",
+                  "value": "={{ $json.qty * $json.price }}",
+                  "type": "number"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "connections": {
+        "When executed by another workflow": {
+          "main": [
+            [
+              {
+                "node": "Compute total",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "key": "error",
+      "name": "Resilience: error handler",
+      "nodes": [
+        {
+          "id": "e",
+          "name": "Error Trigger",
+          "type": "flowforge.errorTrigger",
+          "typeVersion": 1,
+          "position": [
+            0,
+            0
+          ],
+          "parameters": {}
+        },
+        {
+          "id": "msg",
+          "name": "Build alert",
+          "type": "flowforge.set",
+          "typeVersion": 1,
+          "position": [
+            280,
+            0
+          ],
+          "parameters": {
+            "mode": "manual",
+            "assignments": {
+              "assignments": [
+                {
+                  "name": "log",
+                  "value": "={{ $now.toISO() }}  {{ $json.workflow.name }} failed at \"{{ $json.execution.lastNodeExecuted }}\": {{ $json.execution.error.message }}\\n",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": "file",
+          "name": "Log to text file",
+          "type": "flowforge.convertToFile",
+          "typeVersion": 1,
+          "position": [
+            560,
+            0
+          ],
+          "parameters": {
+            "operation": "text",
+            "sourceProperty": "log",
+            "binaryPropertyName": "data",
+            "options": {
+              "fileName": "errors.log"
+            }
+          }
+        },
+        {
+          "id": "w",
+          "name": "Append to errors.log",
+          "type": "flowforge.readWriteFile",
+          "typeVersion": 1,
+          "position": [
+            840,
+            0
+          ],
+          "parameters": {
+            "operation": "write",
+            "fileName": "flowforge-demo/errors.log",
+            "dataPropertyName": "data",
+            "options": {
+              "append": true
+            }
+          }
+        }
+      ],
+      "connections": {
+        "Error Trigger": {
+          "main": [
+            [
+              {
+                "node": "Build alert",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Build alert": {
+          "main": [
+            [
+              {
+                "node": "Log to text file",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Log to text file": {
+          "main": [
+            [
+              {
+                "node": "Append to errors.log",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "name": "05 Error output and retry",
+  "nodes": [
+    { "id": "1", "name": "Start", "type": "flowforge.manualTrigger", "typeVersion": 1, "position": [0, 100], "parameters": {} },
+    {
+      "id": "2", "name": "Orders", "type": "flowforge.code", "typeVersion": 1, "position": [220, 100],
+      "parameters": { "jsCode": "return [{ id: 1, qty: 2 }, { id: 2, qty: -1 }, { id: 3, qty: 5 }];" }
+    },
+    {
+      "id": "3", "name": "Validate", "type": "flowforge.code", "typeVersion": 1, "position": [440, 100],
+      "retryOnFail": true, "maxTries": 2, "waitBetweenTries": 0, "onError": "continueErrorOutput",
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCodeEachItem": "if ($json.qty < 0) throw new Error('Order ' + $json.id + ' has a negative quantity');\nreturn { ...$json, valid: true };"
+      }
+    },
+    { "id": "4", "name": "Valid orders", "type": "flowforge.noOp", "typeVersion": 1, "position": [660, 0], "parameters": {} },
+    {
+      "id": "5", "name": "Report problem", "type": "flowforge.set", "typeVersion": 1, "position": [660, 200],
+      "parameters": { "assignments": { "assignments": [{ "name": "alert", "value": "=Check the orders: {{ $json.error }}", "type": "string" }] } }
+    }
+  ],
+  "connections": {
+    "Start": { "main": [[{ "node": "Orders", "type": "main", "index": 0 }]] },
+    "Orders": { "main": [[{ "node": "Validate", "type": "main", "index": 0 }]] },
+    "Validate": { "main": [[{ "node": "Valid orders", "type": "main", "index": 0 }], [{ "node": "Report problem", "type": "main", "index": 0 }]] }
+  }
+}

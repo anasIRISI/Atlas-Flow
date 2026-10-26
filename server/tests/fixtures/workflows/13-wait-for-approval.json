@@ -1,0 +1,117 @@
+{
+  "name": "13 Wait for approval (webhook resume)",
+  "nodes": [
+    {
+      "id": "1",
+      "name": "Webhook",
+      "type": "flowforge.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "path": "demo/approval",
+        "httpMethod": "POST",
+        "responseMode": "onReceived",
+        "options": {
+          "responseBody": "={\"message\": \"Waiting for approval\"}"
+        }
+      }
+    },
+    {
+      "id": "2",
+      "name": "Remember resume URL",
+      "type": "flowforge.set",
+      "typeVersion": 1,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a",
+              "name": "approveUrl",
+              "value": "={{ $execution.resumeUrl }}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "3",
+      "name": "Wait for approval",
+      "type": "flowforge.wait",
+      "typeVersion": 1,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "resume": "webhook",
+        "httpMethod": "GET"
+      }
+    },
+    {
+      "id": "4",
+      "name": "Approved",
+      "type": "flowforge.set",
+      "typeVersion": 1,
+      "position": [
+        720,
+        0
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a",
+              "name": "decision",
+              "value": "={{ $json.query.decision }}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Remember resume URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remember resume URL": {
+      "main": [
+        [
+          {
+            "node": "Wait for approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for approval": {
+      "main": [
+        [
+          {
+            "node": "Approved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

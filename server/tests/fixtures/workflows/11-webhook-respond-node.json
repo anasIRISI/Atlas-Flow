@@ -1,0 +1,117 @@
+{
+  "name": "11 Webhook: Respond to Webhook node",
+  "nodes": [
+    {
+      "id": "1",
+      "name": "Webhook",
+      "type": "flowforge.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        100
+      ],
+      "parameters": {
+        "path": "demo/respond",
+        "httpMethod": "POST",
+        "responseMode": "responseNode"
+      }
+    },
+    {
+      "id": "2",
+      "name": "Has name?",
+      "type": "flowforge.if",
+      "typeVersion": 1,
+      "position": [
+        240,
+        100
+      ],
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "c",
+              "leftValue": "={{ $json.body.name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "3",
+      "name": "Reply OK",
+      "type": "flowforge.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"hello\": \"{{ $json.body.name }}\", \"time\": \"{{ $now.toFormat('HH:mm') }}\" }",
+        "options": {
+          "responseHeaders": [
+            {
+              "name": "X-Powered-By",
+              "value": "FlowForge"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "4",
+      "name": "Reply 400",
+      "type": "flowforge.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        480,
+        200
+      ],
+      "parameters": {
+        "respondWith": "text",
+        "responseText": "name is required",
+        "options": {
+          "responseCode": 400
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Has name?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has name?": {
+      "main": [
+        [
+          {
+            "node": "Reply OK",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply 400",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "name": "Website chatbot (Gemini)",
+  "meta": {
+    "description": "A chat page for phones and computers answered by Google Gemini, with conversation memory. Test it in the editor's chat panel."
+  },
+  "nodes": [
+    {
+      "id": "chat",
+      "name": "Chat",
+      "type": "flowforge.chatTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "website-chatbot-example",
+      "parameters": {
+        "title": "FlowForge assistant",
+        "subtitle": "Powered by Google Gemini",
+        "initialMessages": "Hi there! 👋\nAsk me anything about automation.",
+        "options": {
+          "inputPlaceholder": "Type your question…"
+        }
+      }
+    },
+    {
+      "id": "gemini",
+      "name": "Gemini",
+      "type": "flowforge.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        300,
+        0
+      ],
+      "parameters": {
+        "model": "default",
+        "prompt": "={{ $json.chatInput }}",
+        "systemInstruction": "You are a friendly assistant on a website. Answer in the language of the user, in at most 4 short sentences. If you do not know, say so.",
+        "memory": "session",
+        "sessionKey": "={{ $json.sessionId }}",
+        "contextWindow": 10
+      }
+    },
+    {
+      "id": "note",
+      "name": "How to use",
+      "type": "flowforge.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -310
+      ],
+      "parameters": {
+        "content": "## Website chatbot\n1. Create a free API key at **aistudio.google.com/apikey**.\n2. **Credentials**: add a **Google Gemini API** credential, or set `GEMINI_API_KEY` in `.env`.\n3. Click the **Chat** button (bottom right of the canvas) and send a message: the workflow runs live.\n4. Switch the workflow to **Active**, open **Chat** → the QR code gives the chat page for your phone.\n\nThe bot remembers the conversation of each visitor (Conversation Memory in the Gemini node).",
+        "width": 580,
+        "height": 240,
+        "color": 4
+      }
+    }
+  ],
+  "connections": {
+    "Chat": {
+      "main": [
+        [
+          {
+            "node": "Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {}
+}

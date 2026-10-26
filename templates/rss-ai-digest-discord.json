@@ -1,0 +1,97 @@
+{
+  "name": "RSS articles summarised by Gemini",
+  "meta": {
+    "description": "Every new article of an RSS feed is summarised in two sentences by Google Gemini and posted to a Discord channel.",
+    "categories": [
+      "AI",
+      "Messaging"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "rss",
+      "name": "New article",
+      "type": "flowforge.rssFeedTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "feedUrl": "https://feeds.bbci.co.uk/news/technology/rss.xml",
+        "pollInterval": 30,
+        "pollUnit": "minutes"
+      }
+    },
+    {
+      "id": "ai",
+      "name": "Summarise",
+      "type": "flowforge.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        280,
+        0
+      ],
+      "parameters": {
+        "model": "default",
+        "prompt": "=Summarise this article in two short sentences.\nTitle: {{ $json.title }}\nText: {{ $json.contentSnippet || $json.content || '' }}",
+        "systemInstruction": "You write neutral, concise news summaries."
+      }
+    },
+    {
+      "id": "dc",
+      "name": "Post to Discord",
+      "type": "flowforge.discord",
+      "typeVersion": 1,
+      "position": [
+        560,
+        0
+      ],
+      "parameters": {
+        "operation": "sendMessage",
+        "content": "=📰 **{{ $('New article').item.json.title }}**\n{{ $json.text }}\n{{ $('New article').item.json.link }}"
+      }
+    },
+    {
+      "id": "note",
+      "name": "How to use",
+      "type": "flowforge.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -250
+      ],
+      "parameters": {
+        "content": "## RSS digest with AI\n1. Add a **Google Gemini API** credential and a **Discord Webhook** credential (or set them in `.env`).\n2. Change the feed URL in **New article**.\n3. Activate: new articles are summarised and posted automatically.",
+        "width": 520,
+        "height": 180,
+        "color": 4
+      }
+    }
+  ],
+  "connections": {
+    "New article": {
+      "main": [
+        [
+          {
+            "node": "Summarise",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarise": {
+      "main": [
+        [
+          {
+            "node": "Post to Discord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {}
+}

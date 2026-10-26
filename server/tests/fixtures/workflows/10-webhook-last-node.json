@@ -1,0 +1,62 @@
+{
+  "name": "10 Webhook: respond when last node finishes",
+  "nodes": [
+    {
+      "id": "1",
+      "name": "Webhook",
+      "type": "flowforge.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "path": "demo/last-node",
+        "httpMethod": "POST",
+        "responseMode": "lastNode",
+        "responseData": "firstEntryJson"
+      }
+    },
+    {
+      "id": "2",
+      "name": "Greet",
+      "type": "flowforge.set",
+      "typeVersion": 1,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a",
+              "name": "greeting",
+              "value": "=Hello {{ $json.body.name }}!",
+              "type": "string"
+            },
+            {
+              "id": "b",
+              "name": "length",
+              "value": "={{ $json.body.name.length }}",
+              "type": "number"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Greet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

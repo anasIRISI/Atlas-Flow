@@ -1,0 +1,100 @@
+{
+  "name": "Contact form → emails",
+  "meta": {
+    "description": "A public contact form (with QR code). Each submission emails the admin and sends a designed confirmation to the visitor, then shows a success page."
+  },
+  "nodes": [
+    {
+      "id": "form",
+      "name": "Contact form",
+      "type": "flowforge.formTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "webhookId": "contact-form-example",
+      "parameters": {
+        "formTitle": "Contact us",
+        "formDescription": "Leave us a message. You will get a confirmation by email.",
+        "formTheme": "midnight",
+        "formFields": {
+          "values": [
+            { "id": "name", "fieldLabel": "Name", "fieldType": "text", "requiredField": true, "placeholder": "Your name" },
+            { "id": "email", "fieldLabel": "Email", "fieldType": "email", "requiredField": true, "placeholder": "you@example.com", "helpText": "We send the confirmation to this address." },
+            {
+              "id": "topic",
+              "fieldLabel": "Topic",
+              "fieldType": "dropdown",
+              "requiredField": true,
+              "fieldOptions": { "values": [{ "option": "Question" }, { "option": "Feedback" }, { "option": "Bug report" }] }
+            },
+            { "id": "message", "fieldLabel": "Message", "fieldType": "textarea", "requiredField": true, "placeholder": "How can we help?" }
+          ]
+        },
+        "responseMode": "lastNode",
+        "options": {
+          "buttonLabel": "Send message",
+          "successTitle": "Message sent!",
+          "successMessage": "Thank you. A confirmation email is on its way to your inbox."
+        }
+      }
+    },
+    {
+      "id": "admin",
+      "name": "Notify admin",
+      "type": "flowforge.sendEmail",
+      "typeVersion": 1,
+      "position": [300, -110],
+      "parameters": {
+        "toEmail": "admin@example.com",
+        "subject": "=New message from {{ $json.Name }} ({{ $json.Topic }})",
+        "emailFormat": "template",
+        "templateTitle": "=New message from {{ $json.Name }}",
+        "templateMessage": "=**From:** {{ $json.Name }} ({{ $json.Email }})\n**Topic:** {{ $json.Topic }}\n**Received:** {{ $now.toFormat('d LLL yyyy, HH:mm') }}\n\n{{ $json.Message }}",
+        "templateButtonText": "=Reply to {{ $json.Name }}",
+        "templateButtonUrl": "=mailto:{{ $json.Email }}",
+        "templateFooter": "Sent by the FlowForge workflow \"Contact form → emails\".",
+        "templateColor": "#f0592a",
+        "options": { "replyTo": "={{ $json.Email }}" }
+      }
+    },
+    {
+      "id": "confirm",
+      "name": "Send confirmation",
+      "type": "flowforge.sendEmail",
+      "typeVersion": 1,
+      "position": [300, 110],
+      "parameters": {
+        "toEmail": "={{ $json.Email }}",
+        "subject": "We received your message",
+        "emailFormat": "template",
+        "templateTitle": "=Thanks, {{ $json.Name }}!",
+        "templateMessage": "=We received your message about \"{{ $json.Topic }}\" and will answer soon.\n\nHere is a copy of what you sent:\n\n{{ $json.Message }}",
+        "templateFooter": "You receive this email because you filled in our contact form.",
+        "templateColor": "#4f46e5"
+      }
+    },
+    {
+      "id": "note",
+      "name": "How to use",
+      "type": "flowforge.stickyNote",
+      "typeVersion": 1,
+      "position": [-60, -390],
+      "parameters": {
+        "content": "## Contact form → emails\n1. **Credentials**: add an SMTP credential (Gmail App Password or Brevo), or set `SMTP_*` in `.env`.\n2. Open **Notify admin** and put your own address in **To Email**.\n3. Open **Contact form** → *Listen for test event*, then scan the QR code with your phone.\n4. When it works, switch the workflow to **Active** and share the production URL.",
+        "width": 560,
+        "height": 220,
+        "color": 4
+      }
+    }
+  ],
+  "connections": {
+    "Contact form": {
+      "main": [
+        [
+          { "node": "Notify admin", "type": "main", "index": 0 },
+          { "node": "Send confirmation", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "settings": {}
+}

@@ -1,0 +1,61 @@
+{
+  "name": "@flowforge/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.build.json",
+    "dev": "tsx watch --clear-screen=false src/index.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@dagrejs/dagre": "^3.1.1",
+    "@flowforge/shared": "0.1.0",
+    "@jitl/quickjs-wasmfile-release-sync": "^0.32.0",
+    "acorn": "^8.19.0",
+    "busboy": "^1.6.0",
+    "cheerio": "1.0.0",
+    "chokidar": "^4.0.3",
+    "cookie": "^1.1.1",
+    "croner": "^10.0.1",
+    "dotenv": "^18.0.7",
+    "express": "^5.3.0",
+    "jmespath": "^0.16.0",
+    "luxon": "^3.7.2",
+    "marked": "^18.1.0",
+    "mathjs": "^15.2.0",
+    "nodemailer": "^10.1.0",
+    "qrcode": "^1.5.4",
+    "quickjs-emscripten-core": "^0.32.0",
+    "rss-parser": "^3.13.0",
+    "turndown": "^7.2.4",
+    "undici": "^6.29.0",
+    "ws": "^8.22.0",
+    "xml2js": "^0.6.2",
+    "zod": "^4.6.5"
+  },
+  "optionalDependencies": {
+    "better-sqlite3": "12.9.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/busboy": "^1.5.5",
+    "@types/express": "^5.0.6",
+    "@types/jmespath": "^0.15.2",
+    "@types/luxon": "^3.7.6",
+    "@types/node": "^20.19.43",
+    "@types/qrcode": "^1.5.6",
+    "@types/smtp-server": "^3.5.13",
+    "@types/supertest": "^7.2.1",
+    "@types/turndown": "^5.0.6",
+    "@types/ws": "^8.18.2",
+    "@types/xml2js": "^0.4.14",
+    "postal-mime": "^4.0.5",
+    "smtp-server": "^3.19.21",
+    "supertest": "^7.3.1",
+    "tsx": "^4.23.15",
+    "vitest": "^4.1.12"
+  }
+}

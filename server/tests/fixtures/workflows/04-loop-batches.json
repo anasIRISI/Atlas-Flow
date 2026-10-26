@@ -1,0 +1,31 @@
+{
+  "name": "04 Loop over items in batches",
+  "nodes": [
+    { "id": "1", "name": "Start", "type": "flowforge.manualTrigger", "typeVersion": 1, "position": [0, 0], "parameters": {} },
+    {
+      "id": "2", "name": "Numbers", "type": "flowforge.code", "typeVersion": 1, "position": [220, 0],
+      "parameters": { "jsCode": "return [1, 2, 3, 4, 5].map(n => ({ json: { n } }));" }
+    },
+    { "id": "3", "name": "Loop Over Items", "type": "flowforge.splitInBatches", "typeVersion": 1, "position": [440, 0], "parameters": { "batchSize": 2 } },
+    {
+      "id": "4", "name": "Square", "type": "flowforge.set", "typeVersion": 1, "position": [660, 120],
+      "parameters": {
+        "includeOtherFields": true,
+        "assignments": { "assignments": [
+          { "name": "square", "value": "={{ $json.n * $json.n }}", "type": "number" },
+          { "name": "round", "value": "={{ $runIndex + 1 }}", "type": "number" }
+        ] }
+      }
+    },
+    {
+      "id": "5", "name": "Total", "type": "flowforge.code", "typeVersion": 1, "position": [660, -120],
+      "parameters": { "jsCode": "const squares = $input.all().map(i => i.json.square);\nreturn [{ json: { squares, total: squares.reduce((a, b) => a + b, 0), rounds: Math.max(...$input.all().map(i => i.json.round)) } }];" }
+    }
+  ],
+  "connections": {
+    "Start": { "main": [[{ "node": "Numbers", "type": "main", "index": 0 }]] },
+    "Numbers": { "main": [[{ "node": "Loop Over Items", "type": "main", "index": 0 }]] },
+    "Loop Over Items": { "main": [[{ "node": "Total", "type": "main", "index": 0 }], [{ "node": "Square", "type": "main", "index": 0 }]] },
+    "Square": { "main": [[{ "node": "Loop Over Items", "type": "main", "index": 0 }]] }
+  }
+}
